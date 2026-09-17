@@ -1,0 +1,36 @@
+[
+  {
+    "nome": "bollo",
+    "articolo": "al",
+    "data": "2026-10-15",
+    "id": "Bollo",
+    "categoria": "veicolo"
+  },
+  {
+    "nome": "revisione",
+    "articolo": "alla",
+    "data": "2027-01-20",
+    "id": "Revisione",
+    "categoria": "veicolo"
+  },
+  {
+    "nome": "assicurazione",
+    "articolo": "all'",
+    "data": "2026-12-03",
+    "id": "Assicurazione",
+    "categoria": "veicolo"
+  },
+  {
+    "nome": "assicurazione dell'animale domestico",
+    "articolo": "all'",
+    "data": "2026-12-21",
+    "id": "AssicurazioneAnimale",
+    "categoria": "casa"
+  },
+  {
+    "nome": "tagliando",
+    "articolo": "al",
+    "data": "2026-11-20",
+    "categoria": "veicolo"
+  }
+]

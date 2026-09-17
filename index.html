@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Le mie scadenze</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    h2 {
+      color: #2c3e50;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    p {
+      text-align: center;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: white;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border-left: 5px solid #3498db;
+    }
+
+    form {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    input, select {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Le mie scadenze</h1>
+
+  <p>Ecco le prossime scadenze da non dimenticare:</p>
+  <ul id="elencoScadenze"></ul>
+
+  <h2>Aggiungi una nuova scadenza</h2>
+  <form id="formScadenza">
+    <select id="inputNome" required>
+      <option value="" disabled selected>Scegli il tipo di scadenza</option>
+      <optgroup label="Veicolo">
+        <option value="bollo" data-articolo="al" data-categoria="veicolo">Bollo</option>
+        <option value="revisione" data-articolo="alla" data-categoria="veicolo">Revisione</option>
+        <option value="tagliando" data-articolo="al" data-categoria="veicolo">Tagliando</option>
+        <option value="assicurazione veicolo" data-articolo="all'" data-categoria="veicolo">Assicurazione veicolo</option>
+      </optgroup>
+      <optgroup label="Casa">
+        <option value="assicurazione dell'animale domestico" data-articolo="all'" data-categoria="casa">Assicurazione animale domestico</option>
+        <option value="assicurazione incendio e scoppio casa" data-articolo="all'" data-categoria="casa">Assicurazione incendio e scoppio (casa)</option>
+        <option value="assicurazione furto e rapina casa" data-articolo="all'" data-categoria="casa">Assicurazione furto e rapina (casa)</option>
+        <option value="responsabilità civile famiglia" data-articolo="alla" data-categoria="casa">Responsabilità civile famiglia</option>
+        <option value="assicurazione eventi atmosferici casa" data-articolo="all'" data-categoria="casa">Assicurazione eventi atmosferici (casa)</option>
+        <option value="assicurazione prima casa" data-articolo="all'" data-categoria="casa">Assicurazione prima casa</option>
+        <option value="polizza vita" data-articolo="alla" data-categoria="casa">Polizza vita</option>
+      </optgroup>
+    </select>
+
+    <input type="text" id="inputTarga" placeholder="Targa (solo per il veicolo, es. AB123CD)">
+
+    <input type="date" id="inputData" required>
+
+    <button type="submit">Aggiungi</button>
+  </form>
+
+  <script>
+    let oggi = new Date();
+
+    let listaScadenze = DATI_SCADENZE;
+
+    function calcolaGiorniMancanti(data) {
+      let scadenzaData = new Date(data);
+      let differenza = scadenzaData - oggi;
+      let giorni = Math.round(differenza / (1000*60*60*24));
+      return giorni;
+    }
+
+    function mostraScadenze() {
+      let contenitore = document.querySelector("#elencoScadenze");
+      contenitore.innerHTML = "";
+
+      for (let i = 0; i < listaScadenze.length; i++) {
+        let giorni = calcolaGiorniMancanti(listaScadenze[i].data);
+        let voce = document.createElement("li");
+
+        let testo = "";
+        if (giorni < 30) {
+          testo = "⚠️ URGENTE - Giorni mancanti " + listaScadenze[i].articolo + " " + listaScadenze[i].nome + ": " + giorni;
+        } else {
+          testo = "Giorni mancanti " + listaScadenze[i].articolo + " " + listaScadenze[i].nome + ": " + giorni;
+        }
+
+        if (listaScadenze[i].targa) {
+          testo = testo + " (targa: " + listaScadenze[i].targa + ")";
+        }
+
+        voce.textContent = testo;
+        contenitore.appendChild(voce);
+        let bottoneElimina = document.createElement("button");
+bottoneElimina.textContent = "Elimina";
+bottoneElimina.addEventListener("click", function() {
+  let conferma = confirm("Sei sicuro di voler eliminare questa scadenza?");
+  if (conferma) {
+    fetch("/elimina-scadenza", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: listaScadenze[i]._id })
+    }).then(function() {
+      location.reload();
+    });
+  }
+});
+voce.appendChild(bottoneElimina);
+      }
+    }
+
+    mostraScadenze();
+
+    let form = document.querySelector("#formScadenza");
+
+    form.addEventListener("submit", function(evento) {
+      evento.preventDefault();
+
+      let selectNome = document.querySelector("#inputNome");
+      let opzioneScelta = selectNome.options[selectNome.selectedIndex];
+
+      let nuovaScadenza = {
+        nome: selectNome.value,
+        articolo: opzioneScelta.dataset.articolo,
+        categoria: opzioneScelta.dataset.categoria,
+        targa: document.querySelector("#inputTarga").value,
+        data: document.querySelector("#inputData").value
+      };
+
+      fetch("/aggiungi-scadenza", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuovaScadenza)
+      }).then(function() {
+        location.reload();
+      });
+    });
+  </script>
+
+</body>
+</html>
