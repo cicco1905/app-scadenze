@@ -77,7 +77,7 @@ async function avviaServer() {
         let nuovaScadenza = JSON.parse(corpo);
         await collezioneScadenze.insertOne(nuovaScadenza);
         risposta.end("ok");
-    ;
+          });
     } else if (richiesta.url === "/scadenze") {
       const paginaHtml = fs.readFileSync("index.html");
       risposta.end(paginaHtml);
