@@ -77,7 +77,7 @@ async function avviaServer() {
         let nuovaScadenza = JSON.parse(corpo);
         await collezioneScadenze.insertOne(nuovaScadenza);
         risposta.end("ok");
-      });
+    ;
     } else if (richiesta.url === "/scadenze") {
       const paginaHtml = fs.readFileSync("index.html");
       risposta.end(paginaHtml);
@@ -97,8 +97,9 @@ async function avviaServer() {
     });
     
 
-  server.listen(3000);
-  console.log("Server acceso, in ascolto sulla porta 3000");
+  const porta = process.env.PORT || 3000;
+  server.listen(porta);
+  console.log(`Server acceso, in ascolto sulla porta ${porta}`);
 }
 
 avviaServer();
