@@ -89,7 +89,34 @@ async function avviaServer() {
     await collezioneScadenze.deleteOne({ _id: new ObjectId(datiRicevuti.id) });
     risposta.end("ok");
   });
-  
+  } else if (richiesta.url === "/manifest.json") {
+  const manifest = fs.readFileSync("manifest.json", "utf-8");
+  risposta.writeHead(200, { "Content-Type": "application/json" });
+  risposta.end(manifest);
+} else if (richiesta.url === "/service-worker.js") {
+  const serviceWorker = fs.readFileSync("service-worker.js", "utf-8");
+  risposta.writeHead(200, { "Content-Type": "application/javascript" });
+  risposta.end(serviceWorker);
+} else if (richiesta.url === "/icone/icon-192.png") {
+  const immagine = fs.readFileSync("icone/icon-192.png");
+  risposta.writeHead(200, { "Content-Type": "image/png" });
+  risposta.end(immagine);
+} else if (richiesta.url === "/icone/icon-512.png") {
+  const immagine = fs.readFileSync("icone/icon-512.png");
+  risposta.writeHead(200, { "Content-Type": "image/png" });
+  risposta.end(immagine);
+} else if (richiesta.url === "/icone/icon-maskable-192.png") {
+  const immagine = fs.readFileSync("icone/icon-maskable-192.png");
+  risposta.writeHead(200, { "Content-Type": "image/png" });
+  risposta.end(immagine);
+} else if (richiesta.url === "/icone/icon-maskable-512.png") {
+  const immagine = fs.readFileSync("icone/icon-maskable-512.png");
+  risposta.writeHead(200, { "Content-Type": "image/png" });
+  risposta.end(immagine);
+} else if (richiesta.url === "/icone/apple-touch-icon.png") {
+  const immagine = fs.readFileSync("icone/apple-touch-icon.png");
+  risposta.writeHead(200, { "Content-Type": "image/png" });
+  risposta.end(immagine);
     } else {
       risposta.end("Pagina non trovata");
 

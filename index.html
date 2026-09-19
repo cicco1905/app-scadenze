@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Le mie scadenze</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icone/apple-touch-icon.png">
+  <meta name="theme-color" content="#FF4E00">
 
   <style>
     body {
@@ -181,6 +184,10 @@ voce.appendChild(bottoneElimina);
         location.reload();
       });
     });
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
   </script>
 
 </body>
