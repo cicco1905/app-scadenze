@@ -89,6 +89,14 @@ async function avviaServer() {
     await collezioneScadenze.deleteOne({ _id: new ObjectId(datiRicevuti.id) });
     risposta.end("ok");
   });
+  } else if (richiesta.url === "/modifica-scadenza") {
+  let corpo = "";
+  richiesta.on("data", function(pezzo) { corpo += pezzo; });
+  richiesta.on("end", async () => {
+    let datiRicevuti = JSON.parse(corpo);
+    await collezioneScadenze.updateOne({ _id: new ObjectId(datiRicevuti.id) }, { $set: { data: datiRicevuti.data } });
+    risposta.end("ok");
+  });
   } else if (richiesta.url === "/manifest.json") {
   const manifest = fs.readFileSync("manifest.json", "utf-8");
   risposta.writeHead(200, { "Content-Type": "application/json" });

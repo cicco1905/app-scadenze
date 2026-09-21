@@ -120,19 +120,51 @@
       return giorni;
     }
 
+    function formattaDurata(data) {
+      let scadenza = new Date(data);
+
+      let anni = scadenza.getFullYear() - oggi.getFullYear();
+      let mesi = scadenza.getMonth() - oggi.getMonth();
+      let giorni = scadenza.getDate() - oggi.getDate();
+
+      if (giorni < 0) {
+        mesi = mesi - 1;
+        let ultimoGiornoMesePrecedente = new Date(scadenza.getFullYear(), scadenza.getMonth(), 0).getDate();
+        giorni = giorni + ultimoGiornoMesePrecedente;
+      }
+
+      if (mesi < 0) {
+        anni = anni - 1;
+        mesi = mesi + 12;
+      }
+
+      let parti = [];
+      if (anni > 0) { parti.push(anni + (anni === 1 ? " anno" : " anni")); }
+      if (mesi > 0) { parti.push(mesi + (mesi === 1 ? " mese" : " mesi")); }
+      if (giorni > 0 || parti.length === 0) { parti.push(giorni + (giorni === 1 ? " giorno" : " giorni")); }
+
+      if (parti.length === 1) {
+        return parti[0];
+      } else {
+        let ultima = parti.pop();
+        return parti.join(", ") + " e " + ultima;
+      }
+    }
+
     function mostraScadenze() {
       let contenitore = document.querySelector("#elencoScadenze");
       contenitore.innerHTML = "";
 
       for (let i = 0; i < listaScadenze.length; i++) {
         let giorni = calcolaGiorniMancanti(listaScadenze[i].data);
+        let durata = formattaDurata(listaScadenze[i].data);
         let voce = document.createElement("li");
 
         let testo = "";
         if (giorni < 30) {
-          testo = "⚠️ URGENTE - Giorni mancanti " + listaScadenze[i].articolo + " " + listaScadenze[i].nome + ": " + giorni;
+          testo = "⚠️ URGENTE - Mancano " + durata + " " + listaScadenze[i].articolo + " " + listaScadenze[i].nome;
         } else {
-          testo = "Giorni mancanti " + listaScadenze[i].articolo + " " + listaScadenze[i].nome + ": " + giorni;
+          testo = "Mancano " + durata + " " + listaScadenze[i].articolo + " " + listaScadenze[i].nome;
         }
 
         if (listaScadenze[i].targa) {
@@ -156,9 +188,33 @@ bottoneElimina.addEventListener("click", function() {
   }
 });
 voce.appendChild(bottoneElimina);
+
+let bottoneModifica = document.createElement("button");
+bottoneModifica.textContent = "Modifica";
+bottoneModifica.addEventListener("click", function() {
+  let inputData = document.createElement("input");
+  inputData.type = "date";
+  inputData.value = listaScadenze[i].data;
+
+  let bottoneSalva = document.createElement("button");
+  bottoneSalva.textContent = "Salva";
+  bottoneSalva.addEventListener("click", function() {
+    fetch("/modifica-scadenza", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: listaScadenze[i]._id, data: inputData.value })
+    }).then(function() {
+      location.reload();
+    });
+  });
+
+  voce.appendChild(inputData);
+  voce.appendChild(bottoneSalva);
+  bottoneModifica.remove();
+});
+voce.appendChild(bottoneModifica);
       }
     }
-
     mostraScadenze();
 
     let form = document.querySelector("#formScadenza");
