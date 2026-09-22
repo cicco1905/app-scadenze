@@ -19,6 +19,14 @@ self.addEventListener("push", (evento) => {
       icon: "/icone/icon-192.png"
     })
   );
+
+  if ("setAppBadge" in self.registration) {
+    if (dati.badge > 0) {
+      self.registration.setAppBadge(dati.badge);
+    } else {
+      self.registration.clearAppBadge();
+    }
+  }
 });
 
 self.addEventListener("notificationclick", (evento) => {

@@ -1,0 +1,14 @@
+◇ injected env (6) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+node:internal/dns/promises:295
+    this.reject(new DNSException(err, this.bindingName, this.hostname));
+                ^
+
+Error: querySrv ECONNREFUSED _mongodb._tcp.cluster0.66ce9o9.mongodb.net
+    at QueryReqWrap.onresolve [as oncomplete] (node:internal/dns/promises:295:17) {
+  errno: undefined,
+  code: 'ECONNREFUSED',
+  syscall: 'querySrv',
+  hostname: '_mongodb._tcp.cluster0.66ce9o9.mongodb.net'
+}
+
+Node.js v22.23.2

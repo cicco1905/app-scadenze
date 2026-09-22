@@ -107,6 +107,7 @@
     </select>
 
     <input type="text" id="inputTarga" placeholder="Targa (solo per il veicolo, es. AB123CD)">
+    <input type="text" id="inputVeicolo" placeholder="Nome veicolo (es. Smart, XADV, scooter)">
 
     <input type="date" id="inputData" required>
 
@@ -123,6 +124,27 @@
       let differenza = scadenzaData - oggi;
       let giorni = Math.round(differenza / (1000*60*60*24));
       return giorni;
+    }
+
+    function aggiornaBadge() {
+      if (!("setAppBadge" in navigator)) {
+        return;
+      }
+
+      let scadenzeUrgenti = 0;
+
+      for (let i = 0; i < listaScadenze.length; i++) {
+        let giorni = calcolaGiorniMancanti(listaScadenze[i].data);
+        if (giorni <= 7) {
+          scadenzeUrgenti = scadenzeUrgenti + 1;
+        }
+      }
+
+      if (scadenzeUrgenti > 0) {
+        navigator.setAppBadge(scadenzeUrgenti);
+      } else {
+        navigator.clearAppBadge();
+      }
     }
 
     function formattaDurata(data) {
@@ -176,6 +198,10 @@
           testo = testo + " (targa: " + listaScadenze[i].targa + ")";
         }
 
+        if (listaScadenze[i].veicolo) {
+          testo = testo + " " + listaScadenze[i].veicolo;
+        }
+
         voce.textContent = testo;
         contenitore.appendChild(voce);
         let bottoneElimina = document.createElement("button");
@@ -221,6 +247,7 @@ voce.appendChild(bottoneModifica);
       }
     }
     mostraScadenze();
+    aggiornaBadge();
 
     let form = document.querySelector("#formScadenza");
 
@@ -235,6 +262,7 @@ voce.appendChild(bottoneModifica);
         articolo: opzioneScelta.dataset.articolo,
         categoria: opzioneScelta.dataset.categoria,
         targa: document.querySelector("#inputTarga").value,
+        veicolo: document.querySelector("#inputVeicolo").value,
         data: document.querySelector("#inputData").value
       };
 

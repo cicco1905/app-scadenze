@@ -27,13 +27,6 @@ const soglie = [30, 15, 7, 3, 1, 0, -1];
 async function controllaScadenze(collezioneScadenze, collezioneAbbonamenti) {
   let listaScadenze = await collezioneScadenze.find().toArray();
 
-  let scadenzeUrgenti = 0;
-  for (let i = 0; i < listaScadenze.length; i++) {
-    if (calcolaGiorniMancanti(listaScadenze[i].data) <= 7) {
-      scadenzeUrgenti = scadenzeUrgenti + 1;
-    }
-  }
-
   for (let i = 0; i < listaScadenze.length; i++) {
     let giorni = calcolaGiorniMancanti(listaScadenze[i].data);
 
@@ -41,12 +34,12 @@ async function controllaScadenze(collezioneScadenze, collezioneAbbonamenti) {
       let testo = "";
 
       if (giorni > 0) {
-        testo = "Mancano " + giorni + " giorni " + listaScadenze[i].nome;
+        testo = "Mancano " + giorni + " giorni " + listaScadenze[i].articolo + " " + listaScadenze[i].nome;
         if (listaScadenze[i].veicolo) {
           testo = testo + " " + listaScadenze[i].veicolo;
         }
       } else if (giorni === 0) {
-        testo = "Scade OGGI " + listaScadenze[i].nome;
+        testo = "Scade OGGI " + listaScadenze[i].articolo + " " + listaScadenze[i].nome;
         if (listaScadenze[i].veicolo) {
           testo = testo + " " + listaScadenze[i].veicolo;
         }
@@ -70,7 +63,7 @@ async function controllaScadenze(collezioneScadenze, collezioneAbbonamenti) {
       let abbonamenti = await collezioneAbbonamenti.find().toArray();
 
       for (let j = 0; j < abbonamenti.length; j++) {
-        let contenutoNotifica = JSON.stringify({ titolo: "Promemoria scadenza", testo: testo, badge: scadenzeUrgenti });
+        let contenutoNotifica = JSON.stringify({ titolo: "Promemoria scadenza", testo: testo });
 
         webPush.sendNotification(abbonamenti[j], contenutoNotifica).catch(function(errore) {
           console.log("Errore nell'invio della notifica push: " + errore);
