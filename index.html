@@ -279,6 +279,29 @@ voce.appendChild(bottoneModifica);
       navigator.serviceWorker.register("/service-worker.js");
     }
 
+    async function aggiornaBottoneNotifiche() {
+      let bottoneNotifiche = document.querySelector("#bottoneNotifiche");
+
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        bottoneNotifiche.style.display = "none";
+        return;
+      }
+
+      if (Notification.permission !== "granted") {
+        return;
+      }
+
+      let registrazione = await navigator.serviceWorker.ready;
+      let abbonamentoEsistente = await registrazione.pushManager.getSubscription();
+
+      if (abbonamentoEsistente) {
+        bottoneNotifiche.textContent = "Notifiche attive";
+        bottoneNotifiche.disabled = true;
+      }
+    }
+
+    aggiornaBottoneNotifiche();
+
     const chiavePubblicaVapid = "BMP3OpHfK1kmd2gQ_kcD6eec0WV5AYte5Z4N7ZalXmAt0FY5gYw2jt8Al1VQDhMcXe9EsVck5sT1UAZdB1fTB88";
 
     function convertiChiave(chiaveBase64) {
@@ -314,6 +337,7 @@ voce.appendChild(bottoneModifica);
         body: JSON.stringify(abbonamento)
       }).then(function() {
         alert("Notifiche attivate!");
+        aggiornaBottoneNotifiche();
       });
     }
 
