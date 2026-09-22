@@ -1,10 +1,17 @@
 require("dotenv").config();
 const { Resend } = require("resend");
+const webPush = require("web-push");
 const { MongoClient, ObjectId } = require("mongodb");
 const http = require("http");
 const fs = require("fs");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+webPush.setVapidDetails(
+  "mailto:cicco.1905@gmail.com",
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 const client = new MongoClient(process.env.MONGODB_URI);
 
 function calcolaGiorniMancanti(data) {
@@ -17,7 +24,7 @@ function calcolaGiorniMancanti(data) {
 
 const soglie = [30, 15, 7, 3, 1, 0, -1];
 
-async function controllaScadenze(collezioneScadenze) {
+async function controllaScadenze(collezioneScadenze, collezioneAbbonamenti) {
   let listaScadenze = await collezioneScadenze.find().toArray();
 
   for (let i = 0; i < listaScadenze.length; i++) {
@@ -42,6 +49,16 @@ async function controllaScadenze(collezioneScadenze) {
       });
 
       console.log("Email inviata per: " + listaScadenze[i].nome);
+
+      let abbonamenti = await collezioneAbbonamenti.find().toArray();
+
+      for (let j = 0; j < abbonamenti.length; j++) {
+        let contenutoNotifica = JSON.stringify({ titolo: "Promemoria scadenza", testo: testo });
+
+        webPush.sendNotification(abbonamenti[j], contenutoNotifica).catch(function(errore) {
+          console.log("Errore nell'invio della notifica push: " + errore);
+        });
+      }
     }
   }
 }
@@ -52,10 +69,11 @@ async function avviaServer() {
 
   const database = client.db("appScadenze");
   const collezioneScadenze = database.collection("scadenze");
+  const collezioneAbbonamenti = database.collection("abbonamenti");
 
-  controllaScadenze(collezioneScadenze);
+  controllaScadenze(collezioneScadenze, collezioneAbbonamenti);
   setInterval(function() {
-    controllaScadenze(collezioneScadenze);
+    controllaScadenze(collezioneScadenze, collezioneAbbonamenti);
   }, 1000 * 60 * 60 * 24);
 
   const server = http.createServer(async (richiesta, risposta) => {
@@ -95,6 +113,14 @@ async function avviaServer() {
   richiesta.on("end", async () => {
     let datiRicevuti = JSON.parse(corpo);
     await collezioneScadenze.updateOne({ _id: new ObjectId(datiRicevuti.id) }, { $set: { data: datiRicevuti.data } });
+    risposta.end("ok");
+  });
+  } else if (richiesta.url === "/salva-abbonamento") {
+  let corpo = "";
+  richiesta.on("data", function(pezzo) { corpo += pezzo; });
+  richiesta.on("end", async () => {
+    let abbonamento = JSON.parse(corpo);
+    await collezioneAbbonamenti.insertOne(abbonamento);
     risposta.end("ok");
   });
   } else if (richiesta.url === "/manifest.json") {

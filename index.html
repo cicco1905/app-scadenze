@@ -78,6 +78,11 @@
   <h1>Le mie scadenze</h1>
 
   <p>Ecco le prossime scadenze da non dimenticare:</p>
+
+  <div style="text-align: center; margin-bottom: 20px;">
+    <button id="bottoneNotifiche">Attiva notifiche</button>
+  </div>
+
   <ul id="elencoScadenze"></ul>
 
   <h2>Aggiungi una nuova scadenza</h2>
@@ -245,6 +250,47 @@ voce.appendChild(bottoneModifica);
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/service-worker.js");
     }
+
+    const chiavePubblicaVapid = "BMP3OpHfK1kmd2gQ_kcD6eec0WV5AYte5Z4N7ZalXmAt0FY5gYw2jt8Al1VQDhMcXe9EsVck5sT1UAZdB1fTB88";
+
+    function convertiChiave(chiaveBase64) {
+      let base64 = chiaveBase64.replace(/-/g, "+").replace(/_/g, "/");
+      let testoDecodificato = atob(base64);
+      let array = new Uint8Array(testoDecodificato.length);
+
+      for (let i = 0; i < testoDecodificato.length; i++) {
+        array[i] = testoDecodificato.charCodeAt(i);
+      }
+
+      return array;
+    }
+
+    async function attivaNotifichePush() {
+      let permesso = await Notification.requestPermission();
+
+      if (permesso !== "granted") {
+        alert("Permesso negato: non potrò mandarti le notifiche.");
+        return;
+      }
+
+      let registrazione = await navigator.serviceWorker.ready;
+
+      let abbonamento = await registrazione.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertiChiave(chiavePubblicaVapid)
+      });
+
+      fetch("/salva-abbonamento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(abbonamento)
+      }).then(function() {
+        alert("Notifiche attivate!");
+      });
+    }
+
+    let bottoneNotifiche = document.querySelector("#bottoneNotifiche");
+    bottoneNotifiche.addEventListener("click", attivaNotifichePush);
   </script>
 
 </body>
