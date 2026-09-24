@@ -24,6 +24,25 @@ function calcolaGiorniMancanti(data) {
 
 const soglie = [30, 15, 7, 3, 1, 0, -1];
 
+function aggiungiMesi(dataStringa, mesi) {
+  let parti = dataStringa.split("-").map(Number);
+  let anno = parti[0];
+  let mese = parti[1] - 1;
+  let giorno = parti[2];
+
+  let mesiTotali = mese + mesi;
+  let nuovoAnno = anno + Math.floor(mesiTotali / 12);
+  let nuovoMese = ((mesiTotali % 12) + 12) % 12;
+
+  let ultimoGiornoNuovoMese = new Date(Date.UTC(nuovoAnno, nuovoMese + 1, 0)).getUTCDate();
+  let nuovoGiorno = Math.min(giorno, ultimoGiornoNuovoMese);
+
+  let meseTesto = String(nuovoMese + 1).padStart(2, "0");
+  let giornoTesto = String(nuovoGiorno).padStart(2, "0");
+
+  return nuovoAnno + "-" + meseTesto + "-" + giornoTesto;
+}
+
 async function controllaScadenze(collezioneScadenze, collezioneAbbonamenti) {
   let listaScadenze = await collezioneScadenze.find().toArray();
 
@@ -101,6 +120,11 @@ async function avviaServer() {
       const paginaHtml = fs.readFileSync("index.html", "utf-8");
       const paginaConDati = paginaHtml.replace("DATI_SCADENZE", JSON.stringify(listaScadenze));
       risposta.end(paginaConDati);
+    } else if (richiesta.url === "/storico") {
+      let listaScadenze = await collezioneScadenze.find().toArray();
+      const paginaHtml = fs.readFileSync("storico.html", "utf-8");
+      const paginaConDati = paginaHtml.replace("DATI_SCADENZE", JSON.stringify(listaScadenze));
+      risposta.end(paginaConDati);
     } else if (richiesta.url === "/aggiungi-scadenza") {
       let corpo = "";
 
@@ -130,6 +154,31 @@ async function avviaServer() {
   richiesta.on("end", async () => {
     let datiRicevuti = JSON.parse(corpo);
     await collezioneScadenze.updateOne({ _id: new ObjectId(datiRicevuti.id) }, { $set: { data: datiRicevuti.data } });
+    risposta.end("ok");
+  });
+  } else if (richiesta.url === "/rinnova-scadenza") {
+  let corpo = "";
+  richiesta.on("data", function(pezzo) { corpo += pezzo; });
+  richiesta.on("end", async () => {
+    let datiRicevuti = JSON.parse(corpo);
+    let scadenza = await collezioneScadenze.findOne({ _id: new ObjectId(datiRicevuti.id) });
+
+    let nuovaDurata = scadenza.durataMesi || 12;
+    if (scadenza.nome === "revisione") {
+      nuovaDurata = 24;
+    }
+
+    let nuovaData = aggiungiMesi(scadenza.data, nuovaDurata);
+
+    let oggiStringa = new Date().toISOString().slice(0, 10);
+
+    await collezioneScadenze.updateOne(
+      { _id: new ObjectId(datiRicevuti.id) },
+      {
+        $set: { data: nuovaData, durataMesi: nuovaDurata },
+        $push: { storicoPagamenti: { dataScaduta: scadenza.data, rinnovatoIl: oggiStringa } }
+      }
+    );
     risposta.end("ok");
   });
   } else if (richiesta.url === "/salva-abbonamento") {

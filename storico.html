@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Storico pagamenti</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icone/apple-touch-icon.png">
+  <meta name="theme-color" content="#FF4E00">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+    }
+
+    p.sottotitolo {
+      text-align: center;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: white;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border-left: 5px solid #27ae60;
+    }
+  </style>
+</head>
+<body>
+
+  <p style="text-align:left; font-style:normal;"><a href="/">Torna alle scadenze</a></p>
+
+  <h1>Storico pagamenti</h1>
+  <p class="sottotitolo">Ogni volta che premi "Pagata" su una scadenza, il pagamento viene salvato qui.</p>
+
+  <ul id="listaStorico"></ul>
+
+  <script>
+    let listaScadenze = DATI_SCADENZE;
+
+    let tuttiIPagamenti = [];
+    for (let i = 0; i < listaScadenze.length; i++) {
+      let scadenza = listaScadenze[i];
+      if (scadenza.storicoPagamenti) {
+        for (let j = 0; j < scadenza.storicoPagamenti.length; j++) {
+          tuttiIPagamenti.push({
+            nome: scadenza.nome,
+            veicolo: scadenza.veicolo,
+            dataScaduta: scadenza.storicoPagamenti[j].dataScaduta,
+            rinnovatoIl: scadenza.storicoPagamenti[j].rinnovatoIl
+          });
+        }
+      }
+    }
+
+    tuttiIPagamenti.sort(function(a, b) {
+      return b.rinnovatoIl.localeCompare(a.rinnovatoIl);
+    });
+
+    let contenitore = document.querySelector("#listaStorico");
+
+    if (tuttiIPagamenti.length === 0) {
+      contenitore.innerHTML = "<p class='sottotitolo'>Nessun pagamento ancora registrato.</p>";
+    } else {
+      for (let i = 0; i < tuttiIPagamenti.length; i++) {
+        let pagamento = tuttiIPagamenti[i];
+        let voce = document.createElement("li");
+
+        let testo = pagamento.nome;
+        if (pagamento.veicolo) {
+          testo += " (" + pagamento.veicolo + ")";
+        }
+        testo += " — scaduta il " + pagamento.dataScaduta + ", pagata/rinnovata il " + pagamento.rinnovatoIl;
+
+        voce.textContent = testo;
+        contenitore.appendChild(voce);
+      }
+    }
+  </script>
+
+</body>
+</html>

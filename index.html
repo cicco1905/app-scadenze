@@ -75,6 +75,8 @@
 </head>
 <body>
 
+  <p style="text-align:left; font-style:normal;"><a href="/storico">Storico pagamenti</a></p>
+
   <h1>Le mie scadenze</h1>
 
   <p>Ecco le prossime scadenze da non dimenticare:</p>
@@ -90,24 +92,36 @@
     <select id="inputNome" required>
       <option value="" disabled selected>Scegli il tipo di scadenza</option>
       <optgroup label="Veicolo">
-        <option value="bollo" data-articolo="al" data-categoria="veicolo">Bollo</option>
-        <option value="revisione" data-articolo="alla" data-categoria="veicolo">Revisione</option>
-        <option value="tagliando" data-articolo="al" data-categoria="veicolo">Tagliando</option>
-        <option value="assicurazione veicolo" data-articolo="all'" data-categoria="veicolo">Assicurazione veicolo</option>
+        <option value="bollo" data-articolo="al" data-categoria="veicolo" data-durata="12">Bollo</option>
+        <option value="revisione" data-articolo="alla" data-categoria="veicolo" data-durata="48">Revisione</option>
+        <option value="tagliando" data-articolo="al" data-categoria="veicolo" data-durata="12">Tagliando</option>
+        <option value="assicurazione veicolo" data-articolo="all'" data-categoria="veicolo" data-durata="12">Assicurazione veicolo</option>
       </optgroup>
       <optgroup label="Casa">
-        <option value="assicurazione dell'animale domestico" data-articolo="all'" data-categoria="casa">Assicurazione animale domestico</option>
-        <option value="assicurazione incendio e scoppio casa" data-articolo="all'" data-categoria="casa">Assicurazione incendio e scoppio (casa)</option>
-        <option value="assicurazione furto e rapina casa" data-articolo="all'" data-categoria="casa">Assicurazione furto e rapina (casa)</option>
-        <option value="responsabilità civile famiglia" data-articolo="alla" data-categoria="casa">Responsabilità civile famiglia</option>
-        <option value="assicurazione eventi atmosferici casa" data-articolo="all'" data-categoria="casa">Assicurazione eventi atmosferici (casa)</option>
-        <option value="assicurazione prima casa" data-articolo="all'" data-categoria="casa">Assicurazione prima casa</option>
-        <option value="polizza vita" data-articolo="alla" data-categoria="casa">Polizza vita</option>
+        <option value="assicurazione dell'animale domestico" data-articolo="all'" data-categoria="casa" data-durata="12">Assicurazione animale domestico</option>
+        <option value="assicurazione incendio e scoppio casa" data-articolo="all'" data-categoria="casa" data-durata="12">Assicurazione incendio e scoppio (casa)</option>
+        <option value="assicurazione furto e rapina casa" data-articolo="all'" data-categoria="casa" data-durata="12">Assicurazione furto e rapina (casa)</option>
+        <option value="responsabilità civile famiglia" data-articolo="alla" data-categoria="casa" data-durata="12">Responsabilità civile famiglia</option>
+        <option value="assicurazione eventi atmosferici casa" data-articolo="all'" data-categoria="casa" data-durata="12">Assicurazione eventi atmosferici (casa)</option>
+        <option value="assicurazione prima casa" data-articolo="all'" data-categoria="casa" data-durata="12">Assicurazione prima casa</option>
+        <option value="polizza vita" data-articolo="alla" data-categoria="casa" data-durata="12">Polizza vita</option>
+        <option value="polizza infortuni familiare" data-articolo="alla" data-categoria="casa" data-durata="12">Polizza infortuni familiare</option>
+        <option value="polizza malattia" data-articolo="alla" data-categoria="casa" data-durata="12">Polizza malattia / sanità integrativa</option>
+        <option value="tutela legale" data-articolo="alla" data-categoria="casa" data-durata="12">Tutela legale</option>
+        <option value="assicurazione catastrofale" data-articolo="all'" data-categoria="casa" data-durata="12">Assicurazione catastrofale (terremoto/alluvione)</option>
+        <option value="assicurazione viaggio" data-articolo="all'" data-categoria="casa" data-durata="12">Assicurazione viaggio</option>
       </optgroup>
     </select>
 
     <input type="text" id="inputTarga" placeholder="Targa (solo per il veicolo, es. AB123CD)">
     <input type="text" id="inputVeicolo" placeholder="Nome veicolo (es. Smart, XADV, scooter)">
+
+    <select id="inputDurata" required>
+      <option value="6">Rinnovo ogni 6 mesi</option>
+      <option value="12" selected>Rinnovo ogni 1 anno</option>
+      <option value="24">Rinnovo ogni 2 anni</option>
+      <option value="48">Rinnovo ogni 4 anni</option>
+    </select>
 
     <input type="date" id="inputData" required>
 
@@ -244,6 +258,19 @@ bottoneModifica.addEventListener("click", function() {
   bottoneModifica.remove();
 });
 voce.appendChild(bottoneModifica);
+
+let bottonePagata = document.createElement("button");
+bottonePagata.textContent = "Pagata";
+bottonePagata.addEventListener("click", function() {
+  fetch("/rinnova-scadenza", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: listaScadenze[i]._id })
+  }).then(function() {
+    location.reload();
+  });
+});
+voce.appendChild(bottonePagata);
       }
     }
     mostraScadenze();
@@ -251,10 +278,15 @@ voce.appendChild(bottoneModifica);
 
     let form = document.querySelector("#formScadenza");
 
+    let selectNome = document.querySelector("#inputNome");
+    selectNome.addEventListener("change", function() {
+      let opzioneScelta = selectNome.options[selectNome.selectedIndex];
+      document.querySelector("#inputDurata").value = opzioneScelta.dataset.durata;
+    });
+
     form.addEventListener("submit", function(evento) {
       evento.preventDefault();
 
-      let selectNome = document.querySelector("#inputNome");
       let opzioneScelta = selectNome.options[selectNome.selectedIndex];
 
       let nuovaScadenza = {
@@ -263,6 +295,7 @@ voce.appendChild(bottoneModifica);
         categoria: opzioneScelta.dataset.categoria,
         targa: document.querySelector("#inputTarga").value,
         veicolo: document.querySelector("#inputVeicolo").value,
+        durataMesi: Number(document.querySelector("#inputDurata").value),
         data: document.querySelector("#inputData").value
       };
 
