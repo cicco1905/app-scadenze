@@ -164,13 +164,18 @@
     function formattaDurata(data) {
       let scadenza = new Date(data);
 
-      let anni = scadenza.getFullYear() - oggi.getFullYear();
-      let mesi = scadenza.getMonth() - oggi.getMonth();
-      let giorni = scadenza.getDate() - oggi.getDate();
+      // Calcolo sempre dalla data più vecchia verso quella più recente,
+      // così la durata viene giusta sia per le scadenze future sia per quelle già passate
+      let inizio = scadenza < oggi ? scadenza : oggi;
+      let fine = scadenza < oggi ? oggi : scadenza;
+
+      let anni = fine.getFullYear() - inizio.getFullYear();
+      let mesi = fine.getMonth() - inizio.getMonth();
+      let giorni = fine.getDate() - inizio.getDate();
 
       if (giorni < 0) {
         mesi = mesi - 1;
-        let ultimoGiornoMesePrecedente = new Date(scadenza.getFullYear(), scadenza.getMonth(), 0).getDate();
+        let ultimoGiornoMesePrecedente = new Date(fine.getFullYear(), fine.getMonth(), 0).getDate();
         giorni = giorni + ultimoGiornoMesePrecedente;
       }
 
@@ -202,7 +207,9 @@
         let voce = document.createElement("li");
 
         let testo = "";
-        if (giorni < 30) {
+        if (giorni < 0) {
+          testo = "⚠️ SCADUTA da " + durata + " — " + listaScadenze[i].nome;
+        } else if (giorni < 30) {
           testo = "⚠️ URGENTE - Mancano " + durata + " " + listaScadenze[i].articolo + " " + listaScadenze[i].nome;
         } else {
           testo = "Mancano " + durata + " " + listaScadenze[i].articolo + " " + listaScadenze[i].nome;
